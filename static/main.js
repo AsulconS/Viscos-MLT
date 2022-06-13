@@ -10,7 +10,7 @@ function init() {
         0.1,
         1000
     );
-    camera.position.z = 2;
+    camera.position.z = 4;
 
     renderer = new THREE.WebGLRenderer( {antialias: true} );
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -24,6 +24,10 @@ function init() {
     cube = new THREE.Mesh(geometry, material);
     scene.add(cube);
 
+    let controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.minDistance = 3;
+    controls.maxDistance = 10;
+
     const gui = new dat.GUI();
     const cubeFolder = gui.addFolder('Cube');
     cubeFolder.add(cube.rotation, 'x', 0, Math.PI * 2);
@@ -31,7 +35,7 @@ function init() {
     cubeFolder.add(cube.rotation, 'z', 0, Math.PI * 2);
     cubeFolder.open();
     const cameraFolder = gui.addFolder('Camera');
-    cameraFolder.add(camera.position, 'z', 0, 10);
+    cameraFolder.add(camera.position, 'z', controls.minDistance, controls.maxDistance).listen();
     cameraFolder.open();
 }
 
