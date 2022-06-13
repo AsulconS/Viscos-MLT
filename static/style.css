@@ -1,0 +1,25 @@
+html {
+    background: #000;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+}
+
+input[type=text] {
+    background: rgb(15, 15, 15);
+    border: solid 1px rgba(63, 63, 63, 0.75);
+    border-radius: 8px;
+    color: rgba(200, 200, 200, 1);
+    font-size: smaller;
+    font-family: 'Poppins', sans-serif;
+    padding: 0.25%;
+    transition: all 0.2s ease-in-out;
+}
+
+input[type=text]:focus {
+    border: solid 1px rgba(200, 200, 200, 1);
+    transition: all 0.3s ease-in-out;
+}

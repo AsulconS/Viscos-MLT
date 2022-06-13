@@ -1,6 +1,11 @@
 # VSCode-specific ignores
 .vscode/
 
+# NPM-specific ignores
+node_modules/
+package-lock.json
+package.json
+
 # System/tool-specific ignores
 .directory
 .DS_Store
