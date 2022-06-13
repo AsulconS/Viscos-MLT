@@ -6,6 +6,11 @@ node_modules/
 package-lock.json
 package.json
 
+# Python-specific ignores
+__pycache__/
+*.py[cod]
+*$py.class
+
 # System/tool-specific ignores
 .directory
 .DS_Store
