@@ -1,0 +1,7 @@
+# VSCode-specific ignores
+.vscode/
+
+# System/tool-specific ignores
+.directory
+.DS_Store
+*~
