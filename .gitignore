@@ -15,3 +15,6 @@ __pycache__/
 .directory
 .DS_Store
 *~
+
+# AsulconS-specific ignores
+sketch/
