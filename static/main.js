@@ -1,4 +1,9 @@
-let scene, camera, renderer, cube;
+let scene, camera, renderer, cube, cubeRot;
+
+
+function radians(angle) {
+    return angle / 180.0 * Math.PI;
+}
 
 
 function setup() {
@@ -30,6 +35,7 @@ function setup() {
         wireframe: true
     });
     cube = new THREE.Mesh(geometry, material);
+    cubeRot = new THREE.Vector3();
     scene.add(cube);
 
     let controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -38,9 +44,9 @@ function setup() {
 
     const gui = new dat.GUI();
     const cubeFolder = gui.addFolder('Cube');
-    cubeFolder.add(cube.rotation, 'x', 0, Math.PI * 2);
-    cubeFolder.add(cube.rotation, 'y', 0, Math.PI * 2);
-    cubeFolder.add(cube.rotation, 'z', 0, Math.PI * 2);
+    cubeFolder.add(cubeRot, 'x', 0, 90, 1);
+    cubeFolder.add(cubeRot, 'y', 0, 90, 1);
+    cubeFolder.add(cubeRot, 'z', 0, 90, 1);
     cubeFolder.open();
     const cameraFolder = gui.addFolder('Camera');
     cameraFolder.add(camera.position, 'z', controls.minDistance, controls.maxDistance).listen();
@@ -49,9 +55,9 @@ function setup() {
 
 
 function render() {
-
-    // cube.rotation.x += 0.01;
-    // cube.rotation.y += 0.01;
+    cube.rotation.x = radians(cubeRot.x);
+    cube.rotation.y = radians(cubeRot.y);
+    cube.rotation.z = radians(cubeRot.z);
 
     renderer.render(scene, camera);
     requestAnimationFrame(render);
