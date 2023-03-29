@@ -4,14 +4,39 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { GUI } from 'dat.gui';
 import Stats from 'three/addons/libs/stats.module';
 
-import { Trace, ArrowMesh } from '/static/vector-line.module.js';
+import { BasisGizmo, AxesBasisGizmo } from '/static/vector-line.module.js';
 
 
-let scene, camera, renderer, kart, kartRot;
+let scene, camera, renderer, kart, kartPos, kartRot, localBasis;
 
 
 function radians(angle) {
     return angle / 180.0 * Math.PI;
+}
+
+
+function unreal_lhspos_to_rhspos(position) {
+    position.set(position.x, position.z, position.y);
+}
+
+
+function unreal_lhsrot_to_rhsrot(rotation) {
+    rotation.set(rotation.x, -rotation.z, rotation.y);
+}
+
+
+function unreal_lhssca_to_rhssca(scale) {
+    scale.set(scale.x, scale.z, scale.y);
+}
+
+
+function unreal_lhs_to_rhs(object) {
+    // Transform Position
+    unreal_lhspos_to_rhspos(object.position);
+    // Transform Rotation
+    unreal_lhsrot_to_rhsrot(object.rotation);
+    // Transform Scale
+    unreal_lhssca_to_rhssca(object.scale);
 }
 
 
@@ -37,26 +62,25 @@ function setup() {
     // Scene Creation
     scene = new THREE.Scene();
 
+    // Ambient Light Setup
+    const hlight = new THREE.AmbientLight(0xf0f0f0, 1);
+    scene.add(hlight);
+
     // World Grid Visualizer
     const gridHelper = new THREE.GridHelper(10, 10);
     scene.add(gridHelper);
 
     // Axes Helper
-    const worldOrigin = new THREE.Vector3(0.0, 0.0, 0.0);
-    const xUnitAxis = new THREE.Vector3(1.0, 0.0, 0.0);
-    const yUnitAxis = new THREE.Vector3(0.0, 1.0, 0.0);
-    const zUnitAxis = new THREE.Vector3(0.0, 0.0, 1.0);
+    const axesBasis = new AxesBasisGizmo();
+    scene.add(axesBasis.group);
 
-    const xAxisLine = new ArrowMesh(new Trace(worldOrigin, xUnitAxis.multiplyScalar(5)), 2, 2, 8, 0xff0000);
-    const yAxisLine = new ArrowMesh(new Trace(worldOrigin, yUnitAxis.multiplyScalar(5)), 2, 2, 8, 0x0000ff);
-    const zAxisLine = new ArrowMesh(new Trace(worldOrigin, zUnitAxis.multiplyScalar(5)), 2, 2, 8, 0x00ff00);
-    scene.add(xAxisLine.group);
-    scene.add(yAxisLine.group);
-    scene.add(zAxisLine.group);
-
-    // Ambient Light Setup
-    const hlight = new THREE.AmbientLight(0xf0f0f0, 1);
-    scene.add(hlight);
+    // Local Axes Helper
+    const origin = new THREE.Vector3(0.0, 0.0, 0.0);
+    const xUnit = new THREE.Vector3(1.0, 0.0, 0.0);
+    const yUnit = new THREE.Vector3(0.0, 0.0, 1.0);
+    const zUnit = new THREE.Vector3(0.0, 1.0, 0.0);
+    localBasis = new BasisGizmo(origin, xUnit, yUnit, zUnit, 0xffaa00, 0xaaff00, 0x00aaff, 4, 1, 4);
+    scene.add(localBasis.group);
 
     // Mesh Loading
     const loader = new GLTFLoader();
@@ -71,7 +95,6 @@ function setup() {
             //gltf.scenes; // Array<THREE.Group>
             //gltf.cameras; // Array<THREE.Camera>
             //gltf.asset; // Object
-            gltf.scene.scale.set(1, 1, 1);
             gltf.scene.traverse((child) => {
                 if (child.isMesh) {
                     let m = child;
@@ -86,6 +109,7 @@ function setup() {
                     l.shadow.mapSize.height = 2048;
                 }
             });
+            gltf.scene.scale.set(0.5, 0.5, 0.5);
             scene.add(gltf.scene);
         },
         // called while loading is progressing
@@ -98,30 +122,39 @@ function setup() {
         }
     )
 
+    // Kart Rotation Folder GUI
+    kartPos = new THREE.Vector3(2, 2, 2);
+    kartRot = new THREE.Vector3(35, 30, 335);
+    const gui = new GUI();
+    const positionFolder = gui.addFolder('Position');
+    positionFolder.add(kartPos, 'x', -5, 5, 1);
+    positionFolder.add(kartPos, 'y', -5, 5, 1);
+    positionFolder.add(kartPos, 'z', -5, 5, 1);
+    positionFolder.open();
+
+    const rotationFolder = gui.addFolder('Rotation');
+    rotationFolder.add(kartRot, 'x', 0, 360, 1);
+    rotationFolder.add(kartRot, 'y', 0, 360, 1);
+    rotationFolder.add(kartRot, 'z', 0, 360, 1);
+    rotationFolder.open();
+
+    // Controls
     let controls = new OrbitControls(camera, renderer.domElement);
     controls.minDistance = 3;
     controls.maxDistance = 10;
-    
-    kartRot = new THREE.Vector3();
-
-    const gui = new GUI();
-    const transformFolder = gui.addFolder('Mesh');
-    transformFolder.add(kartRot, 'x', 0, 90, 1);
-    transformFolder.add(kartRot, 'y', 0, 90, 1);
-    transformFolder.add(kartRot, 'z', 0, 90, 1);
-    transformFolder.open();
-    const cameraFolder = gui.addFolder('Camera');
-    cameraFolder.add(camera.position, 'z', controls.minDistance, controls.maxDistance).listen();
-    cameraFolder.open();
 }
 
 
 function render() {
-    if (kart)
-    {
-        kart.scene.rotation.x = radians(kartRot.x);
-        kart.scene.rotation.y = radians(kartRot.y);
-        kart.scene.rotation.z = radians(kartRot.z);
+    if (kart) {
+        kart.scene.position.set(kartPos.x, kartPos.y, kartPos.z);
+        kart.scene.rotation.set(radians(kartRot.x), radians(kartRot.y), radians(kartRot.z));
+        unreal_lhs_to_rhs(kart.scene);
+    }
+    if (localBasis) {
+        localBasis.group.position.set(kartPos.x, kartPos.y, kartPos.z);
+        localBasis.group.rotation.set(radians(kartRot.x), radians(kartRot.y), radians(kartRot.z));
+        unreal_lhs_to_rhs(localBasis.group);
     }
 
     renderer.render(scene, camera);
