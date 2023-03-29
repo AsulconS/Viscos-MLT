@@ -1,0 +1,11 @@
+Model Information:
+* title:	Kart
+* source:	https://sketchfab.com/3d-models/kart-222d072cbd0f43eaa16a9e51e1f5078d
+* author:	RickyManiac (https://sketchfab.com/RickyManiac)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Kart" (https://sketchfab.com/3d-models/kart-222d072cbd0f43eaa16a9e51e1f5078d) by RickyManiac (https://sketchfab.com/RickyManiac) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
