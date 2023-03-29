@@ -1,5 +1,5 @@
 {% extends "base.html" %}
 {% block title %}Main{% endblock %}
 {% block content %}
-<script src="{{url_for('static', filename='main.js')}}"></script>
+<script type="module" src="{{url_for('static', filename='main.module.js')}}"></script>
 {% endblock %}
