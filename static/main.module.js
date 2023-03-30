@@ -8,7 +8,7 @@ import { BasisGizmo, AxesBasisGizmo } from '/static/vector-line.module.js';
 
 
 let scene, camera, renderer, kart, kartPos, kartRot, localBasis;
-let controls, cameraOffset, lastKartPos;
+let controls, cameraOffset, lastKartPos, lastKartRot, baseHelper;
 
 
 function radians(angle) {
@@ -55,7 +55,7 @@ function setup() {
     const aspect = window.innerWidth / window.innerHeight;
     const near = 0.1;
     const far = 1000;
-    cameraOffset = new THREE.Vector3(2, 2, 1);
+    cameraOffset = new THREE.Vector3(0, 0, 0);
     camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
     
     // Scene Creation
@@ -121,12 +121,17 @@ function setup() {
             console.log(error);
         }
     )
+    kartPos = new THREE.Vector3(1, 1, 1);
+    kartRot = new THREE.Vector3(35, 30, 335);
+    lastKartPos = new THREE.Vector3(kartPos.x - 1, kartPos.y - 1, kartPos.z - 1);
+    lastKartRot = new THREE.Vector3(kartPos.x - 1, kartPos.y - 1, kartPos.z - 1);
+    camera.position.set(kartPos.x + cameraOffset.x, kartPos.z + cameraOffset.z, kartPos.y + cameraOffset.y);
+
+    // Local Base Helper
+    baseHelper = new THREE.PolarGridHelper(1, 8, 4, 64, 0x0000ff);
+    scene.add(baseHelper);
 
     // Kart Rotation Folder GUI
-    kartPos = new THREE.Vector3(2, 2, 2);
-    kartRot = new THREE.Vector3(35, 30, 335);
-    lastKartPos = new THREE.Vector3(kartPos.x, kartPos.y, kartPos.z);
-    camera.position.set(kartPos.x + cameraOffset.x, kartPos.z + cameraOffset.z, kartPos.y + cameraOffset.y);
     const gui = new GUI( { width: 400 } );
     const positionFolder = gui.addFolder('Position');
     positionFolder.add(kartPos, 'x', -5, 5, 1);
@@ -142,7 +147,7 @@ function setup() {
 
     // Controls
     controls = new OrbitControls(camera, renderer.domElement);
-    controls.minDistance = 3;
+    controls.minDistance = 2;
     controls.maxDistance = 10;
     controls.enablePan = false;
     controls.enableDamping = true;
@@ -162,7 +167,10 @@ function render() {
         unreal_lhs_to_rhs(localBasis.group);
     }
     controls.target.set(kartPos.x, kartPos.z, kartPos.y);
-    if ((kartPos.x != lastKartPos.x) || (kartPos.y != lastKartPos.y) || (kartPos.z != lastKartPos.z)) {
+    if ((kartPos.x != lastKartPos.x) || (kartPos.y != lastKartPos.y) || (kartPos.z != lastKartPos.z) ||
+        (kartRot.x != lastKartRot.x) || (kartRot.y != lastKartRot.y) || (kartRot.z != lastKartRot.z)) {
+        baseHelper.position.set(kartPos.x, kartPos.z, kartPos.y);
+        baseHelper.rotation.set(radians(kartRot.x), -radians(kartRot.z), radians(kartRot.y));
         cameraOffset.set(camera.position.x - lastKartPos.x, camera.position.z - lastKartPos.y, camera.position.y - lastKartPos.z);
         camera.position.set(kartPos.x + cameraOffset.x, kartPos.z + cameraOffset.z, kartPos.y + cameraOffset.y);
     }
@@ -172,6 +180,7 @@ function render() {
     requestAnimationFrame(render);
     stats.update();
     lastKartPos.set(kartPos.x, kartPos.y, kartPos.z);
+    lastKartRot.set(kartRot.x, kartRot.y, kartRot.z);
 }
 
 
