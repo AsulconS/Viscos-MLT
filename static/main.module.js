@@ -4,11 +4,13 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { GUI } from 'dat.gui';
 import Stats from 'three/addons/libs/stats.module';
 
-import { BasisGizmo, AxesBasisGizmo } from '/static/vector-line.module.js';
+import { BasisGizmo, AxesBasisGizmo, ArrowMesh, Trace } from '/static/vector-line.module.js';
 
 
 let scene, camera, renderer, kart, kartPos, kartRot, localBasis;
-let controls, cameraOffset, lastKartPos, lastKartRot, baseHelper;
+let controls, cameraOffset, lastKartPos, lastKartRot, baseHelper, vectorIndex;
+
+let sceneVectors;
 
 
 function radians(angle) {
@@ -38,6 +40,25 @@ function unreal_lhs_to_rhs(object) {
     unreal_lhsrot_to_rhsrot(object.rotation);
     // Transform Scale
     unreal_lhssca_to_rhssca(object.scale);
+}
+
+
+function readSingleFile(e) {
+    const file = e.target.files[0];
+    if (!file) {
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const contents = e.target.result;
+        displayContents(contents);
+    };
+    reader.readAsText(file);
+}
+
+
+function displayContents(contents) {
+    console.log(contents);
 }
 
 
@@ -78,7 +99,7 @@ function setup() {
     const xUnit = new THREE.Vector3(1.0, 0.0, 0.0);
     const yUnit = new THREE.Vector3(0.0, 0.0, 1.0);
     const zUnit = new THREE.Vector3(0.0, 1.0, 0.0);
-    localBasis = new BasisGizmo(origin, xUnit, yUnit, zUnit, 0xffaa00, 0xaaff00, 0x00aaff, 4, 1, 4);
+    localBasis = new BasisGizmo(origin, xUnit, yUnit, zUnit, 0xffaa00, 0xaaff00, 0x00aaff, 0.75, 4, 1, 4);
     scene.add(localBasis.group);
 
     // Mesh Loading
@@ -145,6 +166,44 @@ function setup() {
     rotationFolder.add(kartRot, 'z', 0, 360, 1);
     rotationFolder.open();
 
+    const utilsFolder = gui.addFolder('Utils');
+    const loadParams = {
+        loadFile: () => { 
+            document.getElementById('file-input').click();
+        }
+    };
+    utilsFolder.add(loadParams, 'loadFile').name('Load Project File');
+    utilsFolder.open();
+
+    vectorIndex = 0;
+    sceneVectors = [];
+    const equationsFolder = gui.addFolder('Equations');
+    const addVectorParams = {
+        addVector: () => {
+            sceneVectors.push(new ArrowMesh(new Trace(new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 1, 1)), 2, 1, 2, 8, 0x0033bb));
+            scene.add(sceneVectors[vectorIndex].group);
+
+            const vectorFolder = equationsFolder.addFolder('Vector' + String(vectorIndex));
+            vectorFolder.open();
+
+            const vectorOriginFolder = vectorFolder.addFolder('Origin');
+            vectorOriginFolder.add(sceneVectors[vectorIndex].trace.start, 'x');
+            vectorOriginFolder.add(sceneVectors[vectorIndex].trace.start, 'z').name('y');
+            vectorOriginFolder.add(sceneVectors[vectorIndex].trace.start, 'y').name('z');
+            vectorOriginFolder.open();
+
+            const vectorComponentsFolder = vectorFolder.addFolder('Components');
+            vectorComponentsFolder.add(sceneVectors[vectorIndex].trace.end, 'x');
+            vectorComponentsFolder.add(sceneVectors[vectorIndex].trace.end, 'z').name('y');
+            vectorComponentsFolder.add(sceneVectors[vectorIndex].trace.end, 'y').name('z');
+            vectorComponentsFolder.open();
+
+            vectorIndex += 1;
+        }
+    };
+    equationsFolder.add(addVectorParams, 'addVector').name('Add Vector');
+    equationsFolder.open();
+
     // Controls
     controls = new OrbitControls(camera, renderer.domElement);
     controls.minDistance = 2;
@@ -176,6 +235,10 @@ function render() {
     }
     controls.update();
 
+    sceneVectors.forEach((vector) => {
+        vector.updateLocation();
+    });
+
     renderer.render(scene, camera);
     requestAnimationFrame(render);
     stats.update();
@@ -191,6 +254,8 @@ function onWindowResize() {
     render();
 }
 
+
+document.getElementById('file-input').addEventListener('change', readSingleFile, false);
 
 const stats = Stats();
 document.body.appendChild(stats.dom);
